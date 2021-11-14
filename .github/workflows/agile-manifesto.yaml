@@ -9,4 +9,4 @@ jobs:
     steps:
       - uses: akihisa1210/actions-agile-manifesto@main
         with:
-          lang: test
+          lang: ja
