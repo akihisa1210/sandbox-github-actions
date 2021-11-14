@@ -1,0 +1,12 @@
+name: Post Agile Manifest
+
+on: push
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: akihisa1210/actions-agile-manifesto@main
+        with:
+          lang: test
