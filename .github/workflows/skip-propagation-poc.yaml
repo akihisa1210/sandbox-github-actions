@@ -1,0 +1,39 @@
+name: skip-propagation-poc
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  job-a:
+    # push時は常にskippedになるジョブ（skip伝播の起点）
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "job-a ran"
+
+  job-b:
+    # skippedなjob-aに依存するが、always()で自衛して実行されるジョブ
+    needs: [job-a]
+    if: >-
+      always()
+      && (needs.job-a.result == 'success' || needs.job-a.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "job-b ran"
+
+  job-c-implicit:
+    # ifなし（暗黙のsuccess()）。直接のneedsであるjob-bはsuccessのはずだが、
+    # チェーン上流のjob-a(skipped)が伝播してskipされるか？
+    needs: [job-b]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "job-c-implicit ran"
+
+  job-c-guarded:
+    # ステータス関数(!cancelled())で暗黙のsuccess()を置き換え、
+    # 直接needsの結果だけを明示的にチェックする回避策
+    needs: [job-b]
+    if: ${{ !cancelled() && needs.job-b.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "job-c-guarded ran"
